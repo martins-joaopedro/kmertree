@@ -7,7 +7,7 @@ int main() {
 
     fs::path dir = "instances";
     int N = distance(fs::directory_iterator(dir), fs::directory_iterator{});
-    int k = 21;
+    int k = 7;
 
     // vetor pra guardar um apelido pra cada sequencia
     vector<string> instances;
@@ -34,6 +34,7 @@ int main() {
 
         string line;
         string filename = file_path.stem().string();
+        instances.push_back(filename.substr(0, 15));
 
         cout << "Arquivo: " << filename << '\n';
 
@@ -44,9 +45,9 @@ int main() {
 
             //cout << line << "\n";
 
-            instances.push_back(line.substr(0, 15) + "...");
+            
 
-            for(int i=0; i<=line.size() -k; i++) {
+            for(int i=0; i+k<=line.size(); i++) {
                 string kmer = line.substr(i, k); 
                 //cout << id << " ";
 
@@ -62,7 +63,7 @@ int main() {
         id++;
     }
     
-    // cabeçalho
+   /*  // cabeçalho
     cout << setw(8) << "kmer";
     for (int i = 0; i < N; i++)
         cout << setw(6) << ("S" + to_string(i));
@@ -75,19 +76,34 @@ int main() {
             cout << setw(6) << freq;
         cout << "\n";
     }
+ */
+    // calcula a distancia por cosseno
+    for (int i = 0; i < N; i++) {
+        for (int j = i + 1; j < N; j++) {
 
-    // calcula a distancia euclidiana
-    for(int i=0; i<N; i++) {
-        for(int j=i+1; j<N; j++) {
-           double sum = 0.0;
-            // pega o kmer e o vetor que guarda todos as ocorrencias
-            for (auto& [kmer, vet] : kmerFrequency)
-                sum += pow(vet[i] - vet[j], 2);
-            distances[i][j] = sqrt(sum);
-            distances[j][i] = sqrt(sum);
-        }   
+            double dot = 0.0, norm_i = 0.0, norm_j = 0.0;
+
+            for (auto& [kmer, vet] : kmerFrequency) {
+
+                double fi = vet[i];
+                double fj = vet[j];
+
+                dot    += fi * fj;
+                norm_i += fi * fi;
+                norm_j += fj * fj;
+            }
+
+            double cosine = dot / (sqrt(norm_i) * sqrt(norm_j));
+            double dist   = 1.0 - cosine;
+
+            distances[i][j] = dist;
+            distances[j][i] = dist;
+        }
     }
 
+    for(int i=0; i<N; i++)
+        cout << "i -> " << instances[i] << endl;
+        
     for(int i=0; i<N; i++) {
         for(int j=0; j<N; j++)
             cout << distances[i][j] << " ";
